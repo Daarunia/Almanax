@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+
+html,
+body {
+  @apply h-full m-0;
+  color: white;
+  font-family: 'Roboto', sans-serif;
+}
