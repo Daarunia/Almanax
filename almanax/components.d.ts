@@ -12,8 +12,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Almanax: typeof import('./src/components/Almanax.vue')['default']
-    Button: typeof import('primevue/button')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
   }
 }
