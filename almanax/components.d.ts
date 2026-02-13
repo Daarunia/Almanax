@@ -13,5 +13,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     Almanax: typeof import('./src/components/Almanax.vue')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
+    DatePicker: typeof import('primevue/datepicker')['default']
   }
 }

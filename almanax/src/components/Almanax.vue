@@ -116,14 +116,14 @@ watch(items, (newVal) => {
       <!-- Date de début -->
       <div class="flex flex-col  w-100">
         <label for="start" class="w-full mb-1 font-medium text-gray-700">Date de début</label>
-        <Calendar id="start" v-model="startDate" :showIcon="true" dateFormat="dd/mm/yy" class="w-full"
+        <DatePicker id="start" v-model="startDate" :showIcon="true" dateFormat="dd/mm/yy" class="w-full"
           inputClass="w-full" />
       </div>
 
       <!-- Date de fin -->
       <div class="flex flex-col  w-100">
         <label for="end" class="w-full mb-1 font-medium text-gray-700">Date de fin</label>
-        <Calendar id="end" v-model="endDate" :showIcon="true" dateFormat="dd/mm/yy" class="w-full"
+        <DatePicker id="end" v-model="endDate" :showIcon="true" dateFormat="dd/mm/yy" class="w-full"
           inputClass="w-full" />
       </div>
     </div>
@@ -142,7 +142,7 @@ watch(items, (newVal) => {
             {{ item.object }}
           </a>
           <span class="ml-2 text-gray-500 dark:text-gray-400 mr-5">(x{{ item.quantity * count }})</span>
-          <span class="block text-sm text-gray-400">{{ new Date(item.date).toLocaleDateString('fr-FR') }}</span>
+          <span class="block text-sm text-gray-400">{{ new Date(item.date).toLocaleDateString('fr-FR', {day: '2-digit', month: 'long'}) }}</span>
         </li>
       </ul>
     </div>
@@ -152,10 +152,11 @@ watch(items, (newVal) => {
 <script lang="ts">
 import InputNumber from 'primevue/inputnumber'
 import Calendar from 'primevue/calendar'
+import { DatePicker } from 'primevue';
 export default {
   components: {
     InputNumber,
-    Calendar
+    DatePicker
   }
 }
 </script>
