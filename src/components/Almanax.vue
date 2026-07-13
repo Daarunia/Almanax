@@ -224,11 +224,11 @@ watch(items, (newVal) => {
 </script>
 
 <template>
-  <div class="flex flex-row h-full">
-    <div class="flex flex-col justify-center items-center gap-5 align-center w-1/4 p-6 rounded">
+  <div class="flex flex-col md:flex-row h-full min-h-0">
+    <div class="flex flex-col items-center gap-5 w-full md:w-1/4 md:shrink-0 p-6 rounded md:justify-center md:overflow-y-auto">
 
       <!-- Filtres -->
-      <div class="w-100">
+      <div class="w-full max-w-sm">
         <h3 class="mb-2 text-lg font-semibold text-gray-700">Filtres</h3>
 
         <div class="mb-3">
@@ -259,28 +259,28 @@ watch(items, (newVal) => {
       </div>
 
       <!-- Nombre de personnages -->
-      <div class="flex flex-col w-100">
+      <div class="flex flex-col w-full max-w-sm">
         <label for="count" class="w-full mb-1 font-medium text-gray-700">Nombre de personnages</label>
-        <InputNumber id="count" v-model="count" :min="0" :max="100" showButtons class="w-full" />
+        <InputNumber id="count" v-model="count" :min="0" :max="100" showButtons fluid class="w-full" inputClass="w-full" />
       </div>
 
       <!-- Date de début -->
-      <div class="flex flex-col  w-100">
+      <div class="flex flex-col w-full max-w-sm">
         <label for="start" class="w-full mb-1 font-medium text-gray-700">Date de début</label>
-        <DatePicker id="start" v-model="startDate" :showIcon="true" dateFormat="dd/mm/yy" class="w-full"
+        <DatePicker id="start" v-model="startDate" :showIcon="true" dateFormat="dd/mm/yy" fluid class="w-full"
           inputClass="w-full" />
       </div>
 
       <!-- Date de fin -->
-      <div class="flex flex-col  w-100">
+      <div class="flex flex-col w-full max-w-sm">
         <label for="end" class="w-full mb-1 font-medium text-gray-700">Date de fin</label>
-        <DatePicker id="end" v-model="endDate" :showIcon="true" dateFormat="dd/mm/yy" class="w-full"
+        <DatePicker id="end" v-model="endDate" :showIcon="true" dateFormat="dd/mm/yy" fluid class="w-full"
           inputClass="w-full" />
       </div>
     </div>
 
     <!-- Résultats -->
-    <div class="w-full overflow-y-auto max-h-full mt-5 mb-5 pr-4">
+    <div class="w-full min-w-0 overflow-y-auto md:max-h-full mt-5 mb-5 px-4">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
         <h2 class="text-lg font-semibold text-gray-700">
           Résultats ({{ viewMode === 'grocery' ? visibleGrocery.length : visibleItems.length }})
@@ -310,7 +310,7 @@ watch(items, (newVal) => {
       </div>
 
       <!-- Vue liste de courses : items regroupés, quantités sommées -->
-      <ul v-if="viewMode === 'grocery'" class="grid grid-cols-3 gap-2 max-h-full">
+      <ul v-if="viewMode === 'grocery'" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
         <li v-for="entry in visibleGrocery" :key="entry.object"
           class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700"
           :class="{ 'opacity-50': isGathered(entry) }">
@@ -330,7 +330,7 @@ watch(items, (newVal) => {
       </ul>
 
       <!-- Vue par jour -->
-      <ul v-else class="grid grid-cols-3 gap-2 max-h-full">
+      <ul v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
         <li v-for="(item, index) in visibleItems" :key="item.object + index"
           class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <Checkbox binary class="mr-4" v-model="item.purchased"></Checkbox>
