@@ -1,27 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-
-interface AlmanaxItem {
-  object: string
-  quantity: number
-  date: string
-  ankamaId: number
-  subtype: string
-  itemType: string | null
-  image: string | null
-  bonus: string | null
-  bonusType: string | null
-  purchased: boolean
-}
-
-// Libellés FR pour les types d'items renvoyés par l'API DofusDude.
-const SUBTYPE_LABELS: Record<string, string> = {
-  resources: 'Ressource',
-  equipment: 'Équipement',
-  consumables: 'Consommable',
-  quest_items: 'Quête',
-}
-const subtypeLabel = (s: string) => SUBTYPE_LABELS[s] ?? s
+import { type AlmanaxItem, type GroceryEntry, isGathered } from '../almanax'
+import DailyView from './DailyView.vue'
+import GroceryView from './GroceryView.vue'
 
 // Filtre par catégorie HDV. 'all' = pas de filtre.
 const TYPE_FILTERS = [
@@ -130,16 +111,6 @@ const displayedItems = computed(() => {
 // Mode d'affichage : par jour, ou liste de courses (items regroupés + quantités sommées).
 const viewMode = ref<'daily' | 'grocery'>('daily')
 
-interface GroceryEntry {
-  object: string
-  image: string | null
-  subtype: string
-  itemType: string | null
-  total: number // quantité totale (avant multiplication par le nb de persos)
-  days: number // nombre de jours où l'item apparaît sur la plage
-  refs: AlmanaxItem[] // items d'origine, pour la case "récupéré"
-}
-
 // Regroupe les items visibles par nom et somme les quantités.
 const groceryList = computed<GroceryEntry[]>(() => {
   const map = new Map<string, GroceryEntry>()
@@ -161,9 +132,6 @@ const groceryList = computed<GroceryEntry[]>(() => {
   return [...map.values()].sort((a, b) => a.object.localeCompare(b.object, 'fr'))
 })
 
-// Une entrée est "récupérée" quand toutes ses occurrences le sont.
-const isGathered = (entry: GroceryEntry) => entry.refs.every((i) => i.purchased)
-
 // Listes réellement affichées : filtre de statut appliqué par-dessus (date + type).
 const visibleItems = computed(() => {
   if (statusFilter.value === 'all') return displayedItems.value
@@ -184,11 +152,6 @@ const progress = computed(() => {
     : displayedItems.value.filter((i) => i.purchased).length
   return { done, total, percent: total ? Math.round((done / total) * 100) : 0 }
 })
-
-const toggleGathered = (entry: GroceryEntry) => {
-  const next = !isGathered(entry)
-  entry.refs.forEach((i) => (i.purchased = next))
-}
 
 watch(count, (newVal) => {
   if (newVal !== null) localStorage.setItem('count', newVal.toString())
@@ -310,43 +273,10 @@ watch(items, (newVal) => {
       </div>
 
       <!-- Vue liste de courses : items regroupés, quantités sommées -->
-      <ul v-if="viewMode === 'grocery'" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-        <li v-for="entry in visibleGrocery" :key="entry.object"
-          class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700"
-          :class="{ 'opacity-50': isGathered(entry) }">
-          <Checkbox binary class="mr-4" :modelValue="isGathered(entry)" @change="toggleGathered(entry)"></Checkbox>
-          <img v-if="entry.image" :src="entry.image" :alt="entry.object" width="32" height="32" class="mr-3" loading="lazy" />
-          <div class="flex flex-col">
-            <span class="font-medium text-gray-800 dark:text-gray-300">
-              {{ entry.object }}
-              <span class="ml-1 font-semibold text-blue-600 dark:text-blue-400">×{{ entry.total * count }}</span>
-            </span>
-            <span class="text-xs text-gray-400">
-              {{ subtypeLabel(entry.subtype) }}<span v-if="entry.itemType"> · {{ entry.itemType }}</span>
-              · {{ entry.days }} jour{{ entry.days > 1 ? 's' : '' }}
-            </span>
-          </div>
-        </li>
-      </ul>
+      <GroceryView v-if="viewMode === 'grocery'" :entries="visibleGrocery" :count="count" />
 
       <!-- Vue par jour -->
-      <ul v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-        <li v-for="(item, index) in visibleItems" :key="item.object + index"
-          class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700">
-          <Checkbox binary class="mr-4" v-model="item.purchased"></Checkbox>
-          <img v-if="item.image" :src="item.image" :alt="item.object" width="32" height="32" class="mr-3" loading="lazy" />
-          <div class="flex flex-col">
-            <span class="font-medium text-gray-800 dark:text-gray-500">
-              {{ item.object }}
-              <span class="ml-1 text-gray-500 dark:text-gray-400">(x{{ item.quantity * count }})</span>
-            </span>
-            <span class="text-xs text-gray-400">
-              {{ new Date(item.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' }) }}
-              · {{ subtypeLabel(item.subtype) }}<span v-if="item.itemType"> · {{ item.itemType }}</span>
-            </span>
-          </div>
-        </li>
-      </ul>
+      <DailyView v-else :items="visibleItems" :count="count" />
     </div>
   </div>
 </template>
