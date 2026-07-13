@@ -34,13 +34,19 @@ onMounted(async () => {
   if (savedCount) count.value = Number(savedCount)
   if (savedStart) startDate.value = new Date(savedStart)
   if (savedEnd) endDate.value = new Date(savedEnd)
-  if (savedFilter) typeFilter.value = savedFilter
+
+  // Sécurité : on ne restaure une valeur que si elle fait toujours partie des options.
+  // Sinon on garde la valeur par défaut (une option est donc TOUJOURS sélectionnée).
+  const isValid = (options: readonly { value: string }[], v: string | null) =>
+    v !== null && options.some((o) => o.value === v)
+
+  if (isValid(TYPE_FILTERS, savedFilter)) typeFilter.value = savedFilter!
   const savedView = localStorage.getItem('viewMode')
-  if (savedView === 'daily' || savedView === 'grocery') viewMode.value = savedView
+  if (isValid(VIEW_MODES, savedView)) viewMode.value = savedView as 'daily' | 'grocery'
   const savedStatus = localStorage.getItem('statusFilter')
-  if (savedStatus === 'all' || savedStatus === 'todo' || savedStatus === 'done') statusFilter.value = savedStatus
+  if (isValid(STATUS_FILTERS, savedStatus)) statusFilter.value = savedStatus as 'all' | 'todo' | 'done'
   const savedBonus = localStorage.getItem('bonusMode')
-  if (savedBonus === 'tooltip' || savedBonus === 'inline') bonusMode.value = savedBonus
+  if (isValid(BONUS_MODES, savedBonus)) bonusMode.value = savedBonus as 'tooltip' | 'inline'
 
   // Restaurer les cases cochées si elles ont été sauvegardées
   if (savedPurchased) {
