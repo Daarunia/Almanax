@@ -1,4 +1,5 @@
 // Types et helpers partagés autour des données Almanax.
+import { SUBTYPE_LABELS, HARVESTABLE_TYPES } from './constants'
 
 export interface AlmanaxItem {
   object: string
@@ -23,20 +24,12 @@ export interface GroceryEntry {
   refs: AlmanaxItem[] // items d'origine, pour la case "récupéré"
 }
 
-// Libellés FR pour les types d'items renvoyés par l'API DofusDude.
-const SUBTYPE_LABELS: Record<string, string> = {
-  resources: 'Ressource',
-  equipment: 'Équipement',
-  consumables: 'Consommable',
-  quest_items: 'Quête',
-}
+// Libellé FR d'un type d'item (subtype).
 export const subtypeLabel = (s: string) => SUBTYPE_LABELS[s] ?? s
 
 // Une entrée liste de courses est "récupérée" quand toutes ses occurrences le sont.
 export const isGathered = (entry: GroceryEntry) => entry.refs.every((i) => i.purchased)
 
-// Types d'items récoltables via un métier de récolte (Bûcheron, Paysan, Mineur, Alchimiste, Pêcheur).
-// Set "sûr" : les catégories ambiguës (Légume, Racine, Champignon…) ne sont pas incluses.
-const HARVESTABLE_TYPES = new Set(['Bois', 'Céréale', 'Minerai', 'Plante', 'Fleur', 'Poisson'])
+// Un item est récoltable si son type figure dans la liste blanche des métiers de récolte.
 export const isHarvestable = (itemType: string | null) =>
   !!itemType && HARVESTABLE_TYPES.has(itemType)

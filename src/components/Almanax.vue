@@ -1,29 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { type AlmanaxItem, type GroceryEntry, isGathered, isHarvestable } from '../almanax'
+import { TYPE_FILTERS, VIEW_MODES, STATUS_FILTERS, BONUS_MODES } from '../constants'
 import DailyView from './DailyView.vue'
 import GroceryView from './GroceryView.vue'
-
-// Filtre par catégorie HDV. 'all' = pas de filtre.
-const TYPE_FILTERS = [
-  { value: 'all', label: 'Tous' },
-  { value: 'resources', label: 'Ressource' },
-  { value: 'consumables', label: 'Consommable' },
-  { value: 'equipment', label: 'Équipement' },
-  { value: 'harvestable', label: '⛏️ Récoltable' },
-] as const
-
-const VIEW_MODES = [
-  { value: 'daily', label: 'Par jour' },
-  { value: 'grocery', label: 'Liste de courses' },
-] as const
-
-// Filtre par statut de récupération.
-const STATUS_FILTERS = [
-  { value: 'all', label: 'Tous' },
-  { value: 'todo', label: 'À prendre' },
-  { value: 'done', label: 'Pris' },
-] as const
 
 // Valeurs réactives
 const count = ref<number>(1)
@@ -33,11 +13,6 @@ const typeFilter = ref<string>('all')
 const statusFilter = ref<'all' | 'todo' | 'done'>('all')
 const bonusMode = ref<'tooltip' | 'inline'>('tooltip')
 const items = ref<AlmanaxItem[]>([])
-
-const BONUS_MODES = [
-  { value: 'tooltip', label: 'Infobulle' },
-  { value: 'inline', label: 'Affiché' },
-] as const
 
 onMounted(async () => {
   const response = await fetch('/almanax_2026.json')
