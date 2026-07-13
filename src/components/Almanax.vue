@@ -62,12 +62,15 @@ onMounted(async () => {
   if (savedPurchased) {
     const purchasedState = JSON.parse(savedPurchased)
     items.value.forEach((item) => {
-      if (purchasedState[item.object]) {
+      if (purchasedState[itemKey(item)]) {
         item.purchased = true
       }
     })
   }
 })
+
+// Clé unique par occurrence (item + date) : deux jours du même item sont suivis séparément.
+const itemKey = (i: AlmanaxItem) => `${i.object}__${i.date}`
 
 const getDayMonth = (date: string | Date) => {
   const d = new Date(date)
@@ -180,7 +183,7 @@ watch(statusFilter, (newVal) => {
 watch(items, (newVal) => {
   const purchasedState: Record<string, boolean> = {}
   newVal.forEach(item => {
-    if (item.purchased) purchasedState[item.object] = true
+    if (item.purchased) purchasedState[itemKey(item)] = true
   })
   localStorage.setItem('purchased', JSON.stringify(purchasedState))
 }, { deep: true })
