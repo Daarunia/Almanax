@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type GroceryEntry, subtypeLabel, isGathered } from '../almanax'
+import { type GroceryEntry, subtypeLabel, isGathered, isHarvestable } from '../almanax'
 
 defineProps<{
   entries: GroceryEntry[]
@@ -23,6 +23,7 @@ const toggleGathered = (entry: GroceryEntry) => {
       <div class="flex flex-col">
         <span class="font-medium text-gray-800 dark:text-gray-500">
           {{ entry.object }}
+          <span v-if="isHarvestable(entry.itemType)" title="Objet récoltable" class="ml-1 cursor-help">⛏️</span>
           <span class="ml-1 font-semibold text-blue-600 dark:text-blue-400">×{{ entry.total * count }}</span>
         </span>
         <span class="text-xs text-gray-400">

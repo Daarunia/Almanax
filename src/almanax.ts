@@ -34,3 +34,9 @@ export const subtypeLabel = (s: string) => SUBTYPE_LABELS[s] ?? s
 
 // Une entrée liste de courses est "récupérée" quand toutes ses occurrences le sont.
 export const isGathered = (entry: GroceryEntry) => entry.refs.every((i) => i.purchased)
+
+// Types d'items récoltables via un métier de récolte (Bûcheron, Paysan, Mineur, Alchimiste, Pêcheur).
+// Set "sûr" : les catégories ambiguës (Légume, Racine, Champignon…) ne sont pas incluses.
+const HARVESTABLE_TYPES = new Set(['Bois', 'Céréale', 'Minerai', 'Plante', 'Fleur', 'Poisson'])
+export const isHarvestable = (itemType: string | null) =>
+  !!itemType && HARVESTABLE_TYPES.has(itemType)

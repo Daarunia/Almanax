@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type AlmanaxItem, subtypeLabel } from '../almanax'
+import { type AlmanaxItem, subtypeLabel, isHarvestable } from '../almanax'
 
 defineProps<{
   items: AlmanaxItem[]
@@ -20,6 +20,7 @@ const bonusText = (i: AlmanaxItem) =>
       <div class="flex flex-col min-w-0">
         <span class="font-medium text-gray-800 dark:text-gray-500">
           {{ item.object }}
+          <span v-if="isHarvestable(item.itemType)" title="Objet récoltable" class="ml-1 cursor-help">⛏️</span>
           <span class="ml-1 text-gray-500 dark:text-gray-400">(x{{ item.quantity * count }})</span>
           <!-- Mode infobulle : une étoile survolable -->
           <i v-if="item.bonus && bonusMode === 'tooltip'" class="pi pi-star-fill ml-1 text-amber-500"

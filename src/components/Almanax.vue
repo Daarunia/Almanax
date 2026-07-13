@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { type AlmanaxItem, type GroceryEntry, isGathered } from '../almanax'
+import { type AlmanaxItem, type GroceryEntry, isGathered, isHarvestable } from '../almanax'
 import DailyView from './DailyView.vue'
 import GroceryView from './GroceryView.vue'
 
@@ -10,6 +10,7 @@ const TYPE_FILTERS = [
   { value: 'resources', label: 'Ressource' },
   { value: 'consumables', label: 'Consommable' },
   { value: 'equipment', label: 'Équipement' },
+  { value: 'harvestable', label: '⛏️ Récoltable' },
 ] as const
 
 const VIEW_MODES = [
@@ -113,9 +114,12 @@ const filteredItems = computed(() => {
   })
 })
 
-// Applique le filtre de catégorie par-dessus le filtre de dates.
+// Applique le filtre de catégorie (dont "récoltable") par-dessus le filtre de dates.
 const displayedItems = computed(() => {
   if (typeFilter.value === 'all') return filteredItems.value
+  if (typeFilter.value === 'harvestable') {
+    return filteredItems.value.filter((item) => isHarvestable(item.itemType))
+  }
   return filteredItems.value.filter((item) => item.subtype === typeFilter.value)
 })
 
