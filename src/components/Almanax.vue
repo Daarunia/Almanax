@@ -36,11 +36,19 @@ const VIEW_MODES = [
   { value: 'grocery', label: 'Liste de courses' },
 ] as const
 
+// Filtre par statut de récupération.
+const STATUS_FILTERS = [
+  { value: 'all', label: 'Tous' },
+  { value: 'todo', label: 'À prendre' },
+  { value: 'done', label: 'Pris' },
+] as const
+
 // Valeurs réactives
 const count = ref<number>(1)
 const startDate = ref<Date | null>(new Date)
 const endDate = ref<Date | null>(new Date)
 const typeFilter = ref<string>('all')
+const statusFilter = ref<'all' | 'todo' | 'done'>('all')
 const items = ref<AlmanaxItem[]>([])
 
 onMounted(async () => {
@@ -66,6 +74,8 @@ onMounted(async () => {
   if (savedFilter) typeFilter.value = savedFilter
   const savedView = localStorage.getItem('viewMode')
   if (savedView === 'daily' || savedView === 'grocery') viewMode.value = savedView
+  const savedStatus = localStorage.getItem('statusFilter')
+  if (savedStatus === 'all' || savedStatus === 'todo' || savedStatus === 'done') statusFilter.value = savedStatus
 
   // Restaurer les cases cochées si elles ont été sauvegardées
   if (savedPurchased) {
@@ -154,6 +164,18 @@ const groceryList = computed<GroceryEntry[]>(() => {
 // Une entrée est "récupérée" quand toutes ses occurrences le sont.
 const isGathered = (entry: GroceryEntry) => entry.refs.every((i) => i.purchased)
 
+// Listes réellement affichées : filtre de statut appliqué par-dessus (date + type).
+const visibleItems = computed(() => {
+  if (statusFilter.value === 'all') return displayedItems.value
+  const wantDone = statusFilter.value === 'done'
+  return displayedItems.value.filter((i) => i.purchased === wantDone)
+})
+const visibleGrocery = computed(() => {
+  if (statusFilter.value === 'all') return groceryList.value
+  const wantDone = statusFilter.value === 'done'
+  return groceryList.value.filter((e) => isGathered(e) === wantDone)
+})
+
 // Progression : récupérés / total dans la vue courante.
 const progress = computed(() => {
   const total = viewMode.value === 'grocery' ? groceryList.value.length : displayedItems.value.length
@@ -188,6 +210,10 @@ watch(viewMode, (newVal) => {
   localStorage.setItem('viewMode', newVal)
 })
 
+watch(statusFilter, (newVal) => {
+  localStorage.setItem('statusFilter', newVal)
+})
+
 watch(items, (newVal) => {
   const purchasedState: Record<string, boolean> = {}
   newVal.forEach(item => {
@@ -200,6 +226,37 @@ watch(items, (newVal) => {
 <template>
   <div class="flex flex-row h-full">
     <div class="flex flex-col justify-center items-center gap-5 align-center w-1/4 p-6 rounded">
+
+      <!-- Filtres -->
+      <div class="w-100">
+        <h3 class="mb-2 text-lg font-semibold text-gray-700">Filtres</h3>
+
+        <div class="mb-3">
+          <span class="block mb-1 text-sm font-medium text-gray-600">Type</span>
+          <div class="flex flex-wrap gap-2">
+            <button v-for="f in TYPE_FILTERS" :key="f.value" type="button" @click="typeFilter = f.value"
+              class="px-3 py-1 rounded-xl text-sm border transition-colors"
+              :class="typeFilter === f.value
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
+              {{ f.label }}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <span class="block mb-1 text-sm font-medium text-gray-600">Statut</span>
+          <div class="flex flex-wrap gap-2">
+            <button v-for="s in STATUS_FILTERS" :key="s.value" type="button" @click="statusFilter = s.value"
+              class="px-3 py-1 rounded-xl text-sm border transition-colors"
+              :class="statusFilter === s.value
+                ? 'bg-green-600 text-white border-green-600'
+                : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
+              {{ s.label }}
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Nombre de personnages -->
       <div class="flex flex-col w-100">
@@ -226,24 +283,13 @@ watch(items, (newVal) => {
     <div class="w-full overflow-y-auto max-h-full mt-5 mb-5 pr-4">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
         <h2 class="text-lg font-semibold text-gray-700">
-          Résultats ({{ viewMode === 'grocery' ? groceryList.length : displayedItems.length }})
+          Résultats ({{ viewMode === 'grocery' ? visibleGrocery.length : visibleItems.length }})
         </h2>
-
-        <!-- Filtre par catégorie HDV -->
-        <div class="flex flex-wrap gap-2">
-          <button v-for="f in TYPE_FILTERS" :key="f.value" type="button" @click="typeFilter = f.value"
-            class="px-3 py-1 rounded-full text-sm border transition-colors"
-            :class="typeFilter === f.value
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
-            {{ f.label }}
-          </button>
-        </div>
 
         <!-- Bascule de vue (même style pill que les filtres) -->
         <div class="flex flex-wrap gap-2 ml-auto">
           <button v-for="v in VIEW_MODES" :key="v.value" type="button" @click="viewMode = v.value"
-            class="px-3 py-1 rounded-full text-sm border transition-colors"
+            class="px-3 py-1 rounded-xl text-sm border transition-colors"
             :class="viewMode === v.value
               ? 'bg-blue-600 text-white border-blue-600'
               : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
@@ -258,14 +304,14 @@ watch(items, (newVal) => {
           <span>Progression</span>
           <span>{{ progress.done }} / {{ progress.total }} ({{ progress.percent }}%)</span>
         </div>
-        <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-          <div class="h-full rounded-full bg-blue-600 transition-all duration-300" :style="{ width: progress.percent + '%' }"></div>
+        <div class="h-2 w-full rounded-xl bg-gray-200 dark:bg-gray-700 overflow-hidden">
+          <div class="h-full rounded-xl bg-blue-600 transition-all duration-300" :style="{ width: progress.percent + '%' }"></div>
         </div>
       </div>
 
       <!-- Vue liste de courses : items regroupés, quantités sommées -->
       <ul v-if="viewMode === 'grocery'" class="grid grid-cols-3 gap-2 max-h-full">
-        <li v-for="entry in groceryList" :key="entry.object"
+        <li v-for="entry in visibleGrocery" :key="entry.object"
           class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700"
           :class="{ 'opacity-50': isGathered(entry) }">
           <Checkbox binary class="mr-4" :modelValue="isGathered(entry)" @change="toggleGathered(entry)"></Checkbox>
@@ -285,7 +331,7 @@ watch(items, (newVal) => {
 
       <!-- Vue par jour -->
       <ul v-else class="grid grid-cols-3 gap-2 max-h-full">
-        <li v-for="(item, index) in displayedItems" :key="item.object + index"
+        <li v-for="(item, index) in visibleItems" :key="item.object + index"
           class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <Checkbox binary class="mr-4" v-model="item.purchased"></Checkbox>
           <img v-if="item.image" :src="item.image" :alt="item.object" width="32" height="32" class="mr-3" loading="lazy" />
