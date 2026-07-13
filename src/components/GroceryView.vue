@@ -16,9 +16,10 @@ const toggleGathered = (entry: GroceryEntry) => {
 <template>
   <ul class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
     <li v-for="entry in entries" :key="entry.object"
-      class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700"
+      @click="toggleGathered(entry)"
+      class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
       :class="{ 'opacity-50': isGathered(entry) }">
-      <Checkbox binary class="mr-4" :modelValue="isGathered(entry)" @change="toggleGathered(entry)"></Checkbox>
+      <Checkbox binary class="mr-4 pointer-events-none" :modelValue="isGathered(entry)"></Checkbox>
       <img v-if="entry.image" :src="entry.image" :alt="entry.object" width="32" height="32" class="mr-3" loading="lazy" />
       <div class="flex flex-col">
         <span class="font-medium text-gray-800 dark:text-gray-500">
