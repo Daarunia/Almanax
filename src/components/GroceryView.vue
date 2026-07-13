@@ -24,6 +24,8 @@ const toggleGathered = (entry: GroceryEntry) => {
         <span class="font-medium text-gray-800 dark:text-gray-500">
           {{ entry.object }}
           <span v-if="isHarvestable(entry.itemType)" title="Objet récoltable" class="ml-1 cursor-help">⛏️</span>
+          <span v-if="entry.craftable" title="Objet fabricable" class="ml-1 cursor-help">🔨</span>
+          <span v-if="entry.droppable" title="Droppé par un monstre" class="ml-1 cursor-help">💀</span>
           <span class="ml-1 font-semibold text-blue-600 dark:text-blue-400">×{{ entry.total * count }}</span>
         </span>
         <span class="text-xs text-gray-400">

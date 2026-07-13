@@ -21,6 +21,8 @@ const bonusText = (i: AlmanaxItem) =>
         <span class="font-medium text-gray-800 dark:text-gray-500">
           {{ item.object }}
           <span v-if="isHarvestable(item.itemType)" title="Objet récoltable" class="ml-1 cursor-help">⛏️</span>
+          <span v-if="item.craftable" title="Objet fabricable (recette)" class="ml-1 cursor-help">🔨</span>
+          <span v-if="item.droppable" title="Droppé par un monstre" class="ml-1 cursor-help">💀</span>
           <span class="ml-1 text-gray-500 dark:text-gray-400">(x{{ item.quantity * count }})</span>
           <!-- Mode infobulle : une étoile survolable -->
           <i v-if="item.bonus && bonusMode === 'tooltip'" class="pi pi-star-fill ml-1 text-amber-500"

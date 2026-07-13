@@ -8,6 +8,8 @@ export interface AlmanaxItem {
   ankamaId: number
   subtype: string
   itemType: string | null
+  craftable: boolean
+  droppable: boolean
   image: string | null
   bonus: string | null
   bonusType: string | null
@@ -19,6 +21,8 @@ export interface GroceryEntry {
   image: string | null
   subtype: string
   itemType: string | null
+  craftable: boolean
+  droppable: boolean
   total: number // quantité totale (avant multiplication par le nb de persos)
   days: number // nombre de jours où l'item apparaît sur la plage
   refs: AlmanaxItem[] // items d'origine, pour la case "récupéré"
@@ -31,5 +35,4 @@ export const subtypeLabel = (s: string) => SUBTYPE_LABELS[s] ?? s
 export const isGathered = (entry: GroceryEntry) => entry.refs.every((i) => i.purchased)
 
 // Un item est récoltable si son type figure dans la liste blanche des métiers de récolte.
-export const isHarvestable = (itemType: string | null) =>
-  !!itemType && HARVESTABLE_TYPES.has(itemType)
+export const isHarvestable = (itemType: string | null) => !!itemType && HARVESTABLE_TYPES.has(itemType)

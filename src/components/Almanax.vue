@@ -110,6 +110,8 @@ const groceryList = computed<GroceryEntry[]>(() => {
       image: item.image,
       subtype: item.subtype,
       itemType: item.itemType,
+      craftable: item.craftable,
+      droppable: item.droppable,
       total: 0,
       days: 0,
       refs: [],

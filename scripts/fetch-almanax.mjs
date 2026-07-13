@@ -36,26 +36,21 @@ const items = raw.map((d) => ({
   ankamaId: d.tribute.item.ankama_id,
   subtype: d.tribute.item.subtype, // resources | equipment | consumables | ...
   itemType: null, // type précis (« Céréale », « Coiffe »…), rempli ci-dessous
+  craftable: false, // possède une recette (DofusDB)
+  droppable: false, // droppé par au moins un monstre (DofusDB)
   image: d.tribute.item.image_urls?.icon ?? null,
   bonus: d.bonus?.description ?? null,
   bonusType: d.bonus?.type?.name ?? null,
 }))
 
-// Enrichissement : type précis via l'endpoint détail (/items/{subtype}/{ankamaId}).
-// On mutualise les appels par (subtype, ankamaId) car un même item revient plusieurs fois,
-// et on limite la concurrence pour rester poli avec l'API.
-console.log('⏳ Enrichissement des types précis…')
-const uniques = [...new Map(items.map((i) => [`${i.subtype}/${i.ankamaId}`, i])).values()]
-const typeCache = new Map()
-
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-async function fetchType(it) {
-  const url = `https://api.dofusdu.de/dofus3/v1/${lang}/items/${it.subtype}/${it.ankamaId}`
+// Petit helper fetch JSON avec retry/backoff.
+async function fetchJson(url) {
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
       const r = await fetch(url, { headers: { Accept: 'application/json' } })
-      if (r.ok) return (await r.json()).type?.name ?? null
+      if (r.ok) return await r.json()
       if (r.status === 404) return null // pas de retry sur un 404 franc
     } catch {
       /* erreur réseau : on retente */
@@ -65,21 +60,40 @@ async function fetchType(it) {
   return null
 }
 
+// Enrichissement par item unique :
+//  - type précis via DofusDude (/items/{subtype}/{ankamaId})
+//  - flags craftable / droppable via DofusDB (/items/{ankamaId})
+console.log('⏳ Enrichissement (type précis + craftable/droppable)…')
+const uniques = [...new Map(items.map((i) => [i.ankamaId, i])).values()]
+const cache = new Map() // ankamaId -> { itemType, craftable, droppable }
+
 const CONCURRENCY = 6
 let failed = 0
 for (let i = 0; i < uniques.length; i += CONCURRENCY) {
   await Promise.all(
     uniques.slice(i, i + CONCURRENCY).map(async (it) => {
-      const type = await fetchType(it)
-      if (type === null) failed++
-      typeCache.set(`${it.subtype}/${it.ankamaId}`, type)
+      const [dude, db] = await Promise.all([
+        fetchJson(`https://api.dofusdu.de/dofus3/v1/${lang}/items/${it.subtype}/${it.ankamaId}`),
+        fetchJson(`https://api.dofusdb.fr/items/${it.ankamaId}`),
+      ])
+      if (!dude) failed++
+      cache.set(it.ankamaId, {
+        itemType: dude?.type?.name ?? null,
+        craftable: (db?.recipeSlots ?? 0) > 0,
+        droppable: (db?.dropMonsterIds?.length ?? 0) > 0,
+      })
     }),
   )
 }
-if (failed) console.warn(`⚠️  ${failed} type(s) précis non résolus (gardés à null).`)
+if (failed) console.warn(`⚠️  ${failed} item(s) DofusDude non résolus (type gardé à null).`)
 
 for (const it of items) {
-  it.itemType = typeCache.get(`${it.subtype}/${it.ankamaId}`) ?? null
+  const e = cache.get(it.ankamaId)
+  if (e) {
+    it.itemType = e.itemType
+    it.craftable = e.craftable
+    it.droppable = e.droppable
+  }
 }
 
 const outPath = resolve(__dirname, '..', 'public', `almanax_${year}.json`)
