@@ -31,6 +31,11 @@ const TYPE_FILTERS = [
   { value: 'equipment', label: 'Équipement' },
 ] as const
 
+const VIEW_MODES = [
+  { value: 'daily', label: 'Par jour' },
+  { value: 'grocery', label: 'Liste de courses' },
+] as const
+
 // Valeurs réactives
 const count = ref<number>(1)
 const startDate = ref<Date | null>(new Date)
@@ -59,6 +64,8 @@ onMounted(async () => {
   if (savedStart) startDate.value = new Date(savedStart)
   if (savedEnd) endDate.value = new Date(savedEnd)
   if (savedFilter) typeFilter.value = savedFilter
+  const savedView = localStorage.getItem('viewMode')
+  if (savedView === 'daily' || savedView === 'grocery') viewMode.value = savedView
 
   // Restaurer les cases cochées si elles ont été sauvegardées
   if (savedPurchased) {
@@ -110,6 +117,47 @@ const displayedItems = computed(() => {
   return filteredItems.value.filter((item) => item.subtype === typeFilter.value)
 })
 
+// Mode d'affichage : par jour, ou liste de courses (items regroupés + quantités sommées).
+const viewMode = ref<'daily' | 'grocery'>('daily')
+
+interface GroceryEntry {
+  object: string
+  image: string | null
+  subtype: string
+  itemType: string | null
+  total: number // quantité totale (avant multiplication par le nb de persos)
+  days: number // nombre de jours où l'item apparaît sur la plage
+  refs: AlmanaxItem[] // items d'origine, pour la case "récupéré"
+}
+
+// Regroupe les items visibles par nom et somme les quantités.
+const groceryList = computed<GroceryEntry[]>(() => {
+  const map = new Map<string, GroceryEntry>()
+  for (const item of displayedItems.value) {
+    const e = map.get(item.object) ?? {
+      object: item.object,
+      image: item.image,
+      subtype: item.subtype,
+      itemType: item.itemType,
+      total: 0,
+      days: 0,
+      refs: [],
+    }
+    e.total += item.quantity
+    e.days += 1
+    e.refs.push(item)
+    map.set(item.object, e)
+  }
+  return [...map.values()].sort((a, b) => a.object.localeCompare(b.object, 'fr'))
+})
+
+// Une entrée est "récupérée" quand toutes ses occurrences le sont.
+const isGathered = (entry: GroceryEntry) => entry.refs.every((i) => i.purchased)
+const toggleGathered = (entry: GroceryEntry) => {
+  const next = !isGathered(entry)
+  entry.refs.forEach((i) => (i.purchased = next))
+}
+
 watch(count, (newVal) => {
   if (newVal !== null) localStorage.setItem('count', newVal.toString())
 })
@@ -124,6 +172,10 @@ watch(endDate, (newVal) => {
 
 watch(typeFilter, (newVal) => {
   localStorage.setItem('typeFilter', newVal)
+})
+
+watch(viewMode, (newVal) => {
+  localStorage.setItem('viewMode', newVal)
 })
 
 watch(items, (newVal) => {
@@ -162,22 +214,56 @@ watch(items, (newVal) => {
 
     <!-- Résultats -->
     <div class="w-full overflow-y-auto max-h-full mt-5 mb-5 pr-4">
-      <h2 class="text-lg font-semibold mb-3 text-gray-700">
-        Résultats ({{ displayedItems.length }})
-      </h2>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+        <h2 class="text-lg font-semibold text-gray-700">
+          Résultats ({{ viewMode === 'grocery' ? groceryList.length : displayedItems.length }})
+        </h2>
 
-      <!-- Filtre par catégorie HDV -->
-      <div class="flex flex-wrap gap-2 mb-4">
-        <button v-for="f in TYPE_FILTERS" :key="f.value" type="button" @click="typeFilter = f.value"
-          class="px-3 py-1 rounded-full text-sm border transition-colors"
-          :class="typeFilter === f.value
-            ? 'bg-blue-600 text-white border-blue-600'
-            : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
-          {{ f.label }}
-        </button>
+        <!-- Filtre par catégorie HDV -->
+        <div class="flex flex-wrap gap-2">
+          <button v-for="f in TYPE_FILTERS" :key="f.value" type="button" @click="typeFilter = f.value"
+            class="px-3 py-1 rounded-full text-sm border transition-colors"
+            :class="typeFilter === f.value
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
+            {{ f.label }}
+          </button>
+        </div>
+
+        <!-- Bascule de vue (même style pill que les filtres) -->
+        <div class="flex flex-wrap gap-2 ml-auto">
+          <button v-for="v in VIEW_MODES" :key="v.value" type="button" @click="viewMode = v.value"
+            class="px-3 py-1 rounded-full text-sm border transition-colors"
+            :class="viewMode === v.value
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
+            {{ v.label }}
+          </button>
+        </div>
       </div>
 
-      <ul class="grid grid-cols-3 gap-2 max-h-full">
+      <!-- Vue liste de courses : items regroupés, quantités sommées -->
+      <ul v-if="viewMode === 'grocery'" class="grid grid-cols-3 gap-2 max-h-full">
+        <li v-for="entry in groceryList" :key="entry.object"
+          class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700"
+          :class="{ 'opacity-50': isGathered(entry) }">
+          <Checkbox binary class="mr-4" :modelValue="isGathered(entry)" @change="toggleGathered(entry)"></Checkbox>
+          <img v-if="entry.image" :src="entry.image" :alt="entry.object" width="32" height="32" class="mr-3" loading="lazy" />
+          <div class="flex flex-col">
+            <span class="font-medium text-gray-800 dark:text-gray-300">
+              {{ entry.object }}
+              <span class="ml-1 font-semibold text-blue-600 dark:text-blue-400">×{{ entry.total * count }}</span>
+            </span>
+            <span class="text-xs text-gray-400">
+              {{ subtypeLabel(entry.subtype) }}<span v-if="entry.itemType"> · {{ entry.itemType }}</span>
+              · {{ entry.days }} jour{{ entry.days > 1 ? 's' : '' }}
+            </span>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Vue par jour -->
+      <ul v-else class="grid grid-cols-3 gap-2 max-h-full">
         <li v-for="(item, index) in displayedItems" :key="item.object + index"
           class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <Checkbox binary class="mr-4" v-model="item.purchased"></Checkbox>
