@@ -153,6 +153,16 @@ const groceryList = computed<GroceryEntry[]>(() => {
 
 // Une entrée est "récupérée" quand toutes ses occurrences le sont.
 const isGathered = (entry: GroceryEntry) => entry.refs.every((i) => i.purchased)
+
+// Progression : récupérés / total dans la vue courante.
+const progress = computed(() => {
+  const total = viewMode.value === 'grocery' ? groceryList.value.length : displayedItems.value.length
+  const done = viewMode.value === 'grocery'
+    ? groceryList.value.filter(isGathered).length
+    : displayedItems.value.filter((i) => i.purchased).length
+  return { done, total, percent: total ? Math.round((done / total) * 100) : 0 }
+})
+
 const toggleGathered = (entry: GroceryEntry) => {
   const next = !isGathered(entry)
   entry.refs.forEach((i) => (i.purchased = next))
@@ -239,6 +249,17 @@ watch(items, (newVal) => {
               : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
             {{ v.label }}
           </button>
+        </div>
+      </div>
+
+      <!-- Barre de progression -->
+      <div v-if="progress.total" class="mb-4">
+        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <span>Progression</span>
+          <span>{{ progress.done }} / {{ progress.total }} ({{ progress.percent }}%)</span>
+        </div>
+        <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+          <div class="h-full rounded-full bg-blue-600 transition-all duration-300" :style="{ width: progress.percent + '%' }"></div>
         </div>
       </div>
 
