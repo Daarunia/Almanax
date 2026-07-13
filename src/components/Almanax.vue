@@ -30,7 +30,13 @@ const startDate = ref<Date | null>(new Date)
 const endDate = ref<Date | null>(new Date)
 const typeFilter = ref<string>('all')
 const statusFilter = ref<'all' | 'todo' | 'done'>('all')
+const bonusMode = ref<'tooltip' | 'inline'>('tooltip')
 const items = ref<AlmanaxItem[]>([])
+
+const BONUS_MODES = [
+  { value: 'tooltip', label: 'Infobulle' },
+  { value: 'inline', label: 'Affiché' },
+] as const
 
 onMounted(async () => {
   const response = await fetch('/almanax_2026.json')
@@ -57,6 +63,8 @@ onMounted(async () => {
   if (savedView === 'daily' || savedView === 'grocery') viewMode.value = savedView
   const savedStatus = localStorage.getItem('statusFilter')
   if (savedStatus === 'all' || savedStatus === 'todo' || savedStatus === 'done') statusFilter.value = savedStatus
+  const savedBonus = localStorage.getItem('bonusMode')
+  if (savedBonus === 'tooltip' || savedBonus === 'inline') bonusMode.value = savedBonus
 
   // Restaurer les cases cochées si elles ont été sauvegardées
   if (savedPurchased) {
@@ -180,6 +188,10 @@ watch(statusFilter, (newVal) => {
   localStorage.setItem('statusFilter', newVal)
 })
 
+watch(bonusMode, (newVal) => {
+  localStorage.setItem('bonusMode', newVal)
+})
+
 watch(items, (newVal) => {
   const purchasedState: Record<string, boolean> = {}
   newVal.forEach(item => {
@@ -219,6 +231,19 @@ watch(items, (newVal) => {
                 ? 'bg-green-600 text-white border-green-600'
                 : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
               {{ s.label }}
+            </button>
+          </div>
+        </div>
+
+        <div v-if="viewMode === 'daily'" class="mt-3">
+          <span class="block mb-1 text-sm font-medium text-gray-600">Bonus du jour</span>
+          <div class="flex flex-wrap gap-2">
+            <button v-for="b in BONUS_MODES" :key="b.value" type="button" @click="bonusMode = b.value"
+              class="px-3 py-1 rounded-xl text-sm border transition-colors"
+              :class="bonusMode === b.value
+                ? 'bg-amber-500 text-white border-amber-500'
+                : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
+              {{ b.label }}
             </button>
           </div>
         </div>
@@ -279,7 +304,7 @@ watch(items, (newVal) => {
       <GroceryView v-if="viewMode === 'grocery'" :entries="visibleGrocery" :count="count" />
 
       <!-- Vue par jour -->
-      <DailyView v-else :items="visibleItems" :count="count" />
+      <DailyView v-else :items="visibleItems" :count="count" :bonus-mode="bonusMode" />
     </div>
   </div>
 </template>
