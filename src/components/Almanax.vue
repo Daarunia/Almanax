@@ -151,6 +151,11 @@ const progress = computed(() => {
   return { done, total, percent: total ? Math.round((done / total) * 100) : 0 }
 })
 
+// Décoche tous les objets récupérés (le watch sur `items` met à jour le LocalStorage).
+const resetPurchased = () => {
+  items.value.forEach((item) => (item.purchased = false))
+}
+
 watch(count, (newVal) => {
   if (newVal !== null) localStorage.setItem('count', newVal.toString())
 })
@@ -263,6 +268,15 @@ watch(items, (newVal) => {
         <h2 class="text-lg font-semibold text-gray-700">
           Résultats ({{ viewMode === 'grocery' ? visibleGrocery.length : visibleItems.length }})
         </h2>
+
+        <!-- Réinitialiser les objets cochés -->
+        <button type="button" @click="resetPurchased" :disabled="progress.done === 0"
+          title="Décocher tous les objets récupérés"
+          class="px-3 py-1 rounded-xl text-sm border transition-colors flex items-center gap-1
+            border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300
+            hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+          <i class="pi pi-refresh" style="font-size: 0.75rem"></i> Réinitialiser
+        </button>
 
         <!-- Bascule de vue (même style pill que les filtres) -->
         <div class="flex flex-wrap gap-2 ml-auto">
