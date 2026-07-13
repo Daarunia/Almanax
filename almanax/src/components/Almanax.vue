@@ -5,18 +5,41 @@ interface AlmanaxItem {
   object: string
   quantity: number
   date: string
-  url: string
+  ankamaId: number
+  subtype: string
+  itemType: string | null
+  image: string | null
+  bonus: string | null
+  bonusType: string | null
   purchased: boolean
 }
+
+// Libellés FR pour les types d'items renvoyés par l'API DofusDude.
+const SUBTYPE_LABELS: Record<string, string> = {
+  resources: 'Ressource',
+  equipment: 'Équipement',
+  consumables: 'Consommable',
+  quest_items: 'Quête',
+}
+const subtypeLabel = (s: string) => SUBTYPE_LABELS[s] ?? s
+
+// Filtre par catégorie HDV. 'all' = pas de filtre.
+const TYPE_FILTERS = [
+  { value: 'all', label: 'Tous' },
+  { value: 'resources', label: 'Ressource' },
+  { value: 'consumables', label: 'Consommable' },
+  { value: 'equipment', label: 'Équipement' },
+] as const
 
 // Valeurs réactives
 const count = ref<number>(1)
 const startDate = ref<Date | null>(new Date)
 const endDate = ref<Date | null>(new Date)
+const typeFilter = ref<string>('all')
 const items = ref<AlmanaxItem[]>([])
 
 onMounted(async () => {
-  const response = await fetch('/almanax_2028.json')
+  const response = await fetch('/almanax_2026.json')
   items.value = await response.json()
 
   items.value = items.value.map((item: AlmanaxItem) => ({
@@ -30,9 +53,12 @@ onMounted(async () => {
   const savedEnd = localStorage.getItem('endDate')
   const savedPurchased = localStorage.getItem('purchased')
 
+  const savedFilter = localStorage.getItem('typeFilter')
+
   if (savedCount) count.value = Number(savedCount)
   if (savedStart) startDate.value = new Date(savedStart)
   if (savedEnd) endDate.value = new Date(savedEnd)
+  if (savedFilter) typeFilter.value = savedFilter
 
   // Restaurer les cases cochées si elles ont été sauvegardées
   if (savedPurchased) {
@@ -48,10 +74,6 @@ onMounted(async () => {
 const getDayMonth = (date: string | Date) => {
   const d = new Date(date)
   return { day: d.getDate(), month: d.getMonth() + 1 }
-}
-
-const onCheckboxChange = (item: AlmanaxItem) => {
-  console.log('✅ Checkbox changée pour :', item)
 }
 
 const filteredItems = computed(() => {
@@ -82,6 +104,12 @@ const filteredItems = computed(() => {
   })
 })
 
+// Applique le filtre de catégorie par-dessus le filtre de dates.
+const displayedItems = computed(() => {
+  if (typeFilter.value === 'all') return filteredItems.value
+  return filteredItems.value.filter((item) => item.subtype === typeFilter.value)
+})
+
 watch(count, (newVal) => {
   if (newVal !== null) localStorage.setItem('count', newVal.toString())
 })
@@ -92,6 +120,10 @@ watch(startDate, (newVal) => {
 
 watch(endDate, (newVal) => {
   if (newVal) localStorage.setItem('endDate', newVal.toISOString())
+})
+
+watch(typeFilter, (newVal) => {
+  localStorage.setItem('typeFilter', newVal)
 })
 
 watch(items, (newVal) => {
@@ -105,7 +137,7 @@ watch(items, (newVal) => {
 
 <template>
   <div class="flex flex-row h-full">
-    <div class="flex flex-col justify-center items-center gap-5 align-center w-1/2 p-6 rounded">
+    <div class="flex flex-col justify-center items-center gap-5 align-center w-1/4 p-6 rounded">
 
       <!-- Nombre de personnages -->
       <div class="flex flex-col w-100">
@@ -129,34 +161,39 @@ watch(items, (newVal) => {
     </div>
 
     <!-- Résultats -->
-    <div class="w-1/2 overflow-y-auto max-h-full mt-5 mb-5">
+    <div class="w-full overflow-y-auto max-h-full mt-5 mb-5 pr-4">
       <h2 class="text-lg font-semibold mb-3 text-gray-700">
-        Résultats ({{ filteredItems.length }})
+        Résultats ({{ displayedItems.length }})
       </h2>
 
-      <ul class="space-y-2 max-h-full w-1/2">
-        <li v-for="(item, index) in filteredItems" :key="item.object + index"
+      <!-- Filtre par catégorie HDV -->
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button v-for="f in TYPE_FILTERS" :key="f.value" type="button" @click="typeFilter = f.value"
+          class="px-3 py-1 rounded-full text-sm border transition-colors"
+          :class="typeFilter === f.value
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
+          {{ f.label }}
+        </button>
+      </div>
+
+      <ul class="grid grid-cols-3 gap-2 max-h-full">
+        <li v-for="(item, index) in displayedItems" :key="item.object + index"
           class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700">
-          <Checkbox binary class="mr-4" v-model="item.purchased" @change="onCheckboxChange(item)"></Checkbox>
-          <a :href="item.url" target="_blank" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">
-            {{ item.object }}
-          </a>
-          <span class="ml-2 text-gray-500 dark:text-gray-400 mr-5">(x{{ item.quantity * count }})</span>
-          <span class="block text-sm text-gray-400">{{ new Date(item.date).toLocaleDateString('fr-FR', {day: '2-digit', month: 'long'}) }}</span>
+          <Checkbox binary class="mr-4" v-model="item.purchased"></Checkbox>
+          <img v-if="item.image" :src="item.image" :alt="item.object" width="32" height="32" class="mr-3" loading="lazy" />
+          <div class="flex flex-col">
+            <span class="font-medium text-gray-800 dark:text-gray-500">
+              {{ item.object }}
+              <span class="ml-1 text-gray-500 dark:text-gray-400">(x{{ item.quantity * count }})</span>
+            </span>
+            <span class="text-xs text-gray-400">
+              {{ new Date(item.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' }) }}
+              · {{ subtypeLabel(item.subtype) }}<span v-if="item.itemType"> · {{ item.itemType }}</span>
+            </span>
+          </div>
         </li>
       </ul>
     </div>
   </div>
 </template>
-
-<script lang="ts">
-import InputNumber from 'primevue/inputnumber'
-import Calendar from 'primevue/calendar'
-import { DatePicker } from 'primevue';
-export default {
-  components: {
-    InputNumber,
-    DatePicker
-  }
-}
-</script>

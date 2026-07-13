@@ -18,10 +18,15 @@ Cette application est une **liste de course interactive pour l'Almanax de Dofus*
   - `Checkbox` pour marquer les objets récupérés.  
 - Les données sont stockées localement via **LocalStorage** pour conserver l'état entre les visites.
 
-## Scraper
+## Données
 
-- Les données de l'Almanax sont récupérées via un **scraper Scrapy**.  
-- Pour lancer le scraper, utilisez la commande :  
+- Les données sont récupérées via l'**API publique DofusDude** (`api.dofusdu.de`), qui expose un endpoint Almanax dédié.
+- Chaque jour fournit : l'objet d'offrande, la quantité, le type d'item (`subtype`), l'`ankamaId`, l'icône et le bonus du jour.
+- Pour (re)générer `public/almanax_<année>.json` :
 
 ```bash
-scrapy crawl almanax_spider
+npm run fetch-almanax           # année courante
+npm run fetch-almanax 2026      # année précise
+```
+
+> L'ancien `almanax_scraper/` (Scrapy + Selenium) est obsolète : il était fragile et bloqué par CloudFront. Conservé uniquement pour référence.
