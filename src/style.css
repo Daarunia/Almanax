@@ -1,9 +1,23 @@
 @import "tailwindcss";
 @import "primeicons/primeicons.css";
 
+/* Active la variante `dark:` de Tailwind sur la classe .app-dark (toggle manuel). */
+@custom-variant dark (&:where(.app-dark, .app-dark *));
+
 html,
 body {
   @apply h-full m-0;
-  color: white;
   font-family: 'Roboto', sans-serif;
+}
+
+/* Thème clair (par défaut) */
+body {
+  background-color: #ffffff;
+  color: #1f2937;
+}
+
+/* Thème sombre */
+.app-dark body {
+  background-color: #111827;
+  color: #e5e7eb;
 }
