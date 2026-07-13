@@ -29,4 +29,6 @@ npm run fetch-almanax           # année courante
 npm run fetch-almanax 2026      # année précise
 ```
 
-> L'ancien `almanax_scraper/` (Scrapy + Selenium) est obsolète : il était fragile et bloqué par CloudFront. Conservé uniquement pour référence.
+- Le script enrichit aussi chaque item avec son **type précis** (`itemType` : « Céréale », « Cuir »…) via l'endpoint détail de l'API.
+
+> Historique : un ancien scraper Scrapy + Selenium générait ces données. Il a été retiré au profit de l'API DofusDude (plus fiable, sans navigateur headless, non bloqué par CloudFront).
