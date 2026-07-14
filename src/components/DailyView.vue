@@ -4,7 +4,7 @@ import { type AlmanaxItem, subtypeLabel, isHarvestable } from '../almanax'
 defineProps<{
   items: AlmanaxItem[]
   count: number
-  bonusMode: 'tooltip' | 'inline'
+  bonusMode: string
 }>()
 
 const bonusText = (i: AlmanaxItem) =>

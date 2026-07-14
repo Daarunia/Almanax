@@ -16,6 +16,13 @@ export interface AlmanaxItem {
   purchased: boolean
 }
 
+// Valeurs des 3 filtres "pills" regroupées (un seul v-model côté composant).
+export interface PillFilterValues {
+  type: string
+  status: string
+  bonus: string
+}
+
 export interface GroceryEntry {
   object: string
   image: string | null

@@ -15,7 +15,10 @@ declare module 'vue' {
     Checkbox: typeof import('primevue/checkbox')['default']
     DailyView: typeof import('./src/components/DailyView.vue')['default']
     DatePicker: typeof import('primevue/datepicker')['default']
+    FilterPills: typeof import('./src/components/FilterPills.vue')['default']
+    FiltersPanel: typeof import('./src/components/FiltersPanel.vue')['default']
     GroceryView: typeof import('./src/components/GroceryView.vue')['default']
     InputNumber: typeof import('primevue/inputnumber')['default']
+    PillFilters: typeof import('./src/components/PillFilters.vue')['default']
   }
 }

@@ -4,14 +4,15 @@ import { type AlmanaxItem, type GroceryEntry, isGathered, isHarvestable } from '
 import { TYPE_FILTERS, VIEW_MODES, STATUS_FILTERS, BONUS_MODES } from '../constants'
 import DailyView from './DailyView.vue'
 import GroceryView from './GroceryView.vue'
+import FiltersPanel from './FiltersPanel.vue'
 
 // Valeurs réactives
 const count = ref<number>(1)
 const startDate = ref<Date | null>(new Date)
 const endDate = ref<Date | null>(new Date)
 const typeFilter = ref<string>('all')
-const statusFilter = ref<'all' | 'todo' | 'done'>('all')
-const bonusMode = ref<'tooltip' | 'inline'>('tooltip')
+const statusFilter = ref<string>('all')
+const bonusMode = ref<string>('tooltip')
 const items = ref<AlmanaxItem[]>([])
 
 onMounted(async () => {
@@ -44,9 +45,9 @@ onMounted(async () => {
   const savedView = localStorage.getItem('viewMode')
   if (isValid(VIEW_MODES, savedView)) viewMode.value = savedView as 'daily' | 'grocery'
   const savedStatus = localStorage.getItem('statusFilter')
-  if (isValid(STATUS_FILTERS, savedStatus)) statusFilter.value = savedStatus as 'all' | 'todo' | 'done'
+  if (isValid(STATUS_FILTERS, savedStatus)) statusFilter.value = savedStatus!
   const savedBonus = localStorage.getItem('bonusMode')
-  if (isValid(BONUS_MODES, savedBonus)) bonusMode.value = savedBonus as 'tooltip' | 'inline'
+  if (isValid(BONUS_MODES, savedBonus)) bonusMode.value = savedBonus!
 
   // Restaurer les cases cochées si elles ont été sauvegardées
   if (savedPurchased) {
@@ -66,6 +67,16 @@ const getDayMonth = (date: string | Date) => {
   const d = new Date(date)
   return { day: d.getDate(), month: d.getMonth() + 1 }
 }
+
+// Regroupe les 3 filtres pills en un objet pour un v-model unique (les refs restent la source de vérité).
+const pillFilters = computed({
+  get: () => ({ type: typeFilter.value, status: statusFilter.value, bonus: bonusMode.value }),
+  set: (v) => {
+    typeFilter.value = v.type
+    statusFilter.value = v.status
+    bonusMode.value = v.bonus
+  },
+})
 
 const filteredItems = computed(() => {
   if (!startDate.value || !endDate.value) return []
@@ -195,72 +206,8 @@ watch(items, (newVal) => {
 
 <template>
   <div class="flex flex-col md:flex-row h-full min-h-0">
-    <div class="flex flex-col items-center gap-5 w-full md:w-1/4 md:shrink-0 p-6 rounded md:justify-center md:overflow-y-auto">
-
-      <!-- Filtres -->
-      <div class="w-full max-w-sm">
-        <h3 class="mb-2 text-lg font-semibold text-gray-700">Filtres</h3>
-
-        <div class="mb-3">
-          <span class="block mb-1 text-sm font-medium text-gray-600">Type</span>
-          <div class="flex flex-wrap gap-2">
-            <button v-for="f in TYPE_FILTERS" :key="f.value" type="button" @click="typeFilter = f.value"
-              class="px-3 py-1 rounded-xl text-sm border transition-colors"
-              :class="typeFilter === f.value
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
-              {{ f.label }}
-            </button>
-          </div>
-        </div>
-
-        <div>
-          <span class="block mb-1 text-sm font-medium text-gray-600">Statut</span>
-          <div class="flex flex-wrap gap-2">
-            <button v-for="s in STATUS_FILTERS" :key="s.value" type="button" @click="statusFilter = s.value"
-              class="px-3 py-1 rounded-xl text-sm border transition-colors"
-              :class="statusFilter === s.value
-                ? 'bg-green-600 text-white border-green-600'
-                : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
-              {{ s.label }}
-            </button>
-          </div>
-        </div>
-
-        <div v-if="viewMode === 'daily'" class="mt-3">
-          <span class="block mb-1 text-sm font-medium text-gray-600">Bonus du jour</span>
-          <div class="flex flex-wrap gap-2">
-            <button v-for="b in BONUS_MODES" :key="b.value" type="button" @click="bonusMode = b.value"
-              class="px-3 py-1 rounded-xl text-sm border transition-colors"
-              :class="bonusMode === b.value
-                ? 'bg-amber-500 text-white border-amber-500'
-                : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
-              {{ b.label }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nombre de personnages -->
-      <div class="flex flex-col w-full max-w-sm">
-        <label for="count" class="w-full mb-1 font-medium text-gray-700">Nombre de personnages</label>
-        <InputNumber id="count" v-model="count" :min="0" :max="100" showButtons fluid class="w-full" inputClass="w-full" />
-      </div>
-
-      <!-- Date de début -->
-      <div class="flex flex-col w-full max-w-sm">
-        <label for="start" class="w-full mb-1 font-medium text-gray-700">Date de début</label>
-        <DatePicker id="start" v-model="startDate" :showIcon="true" dateFormat="dd/mm/yy" fluid class="w-full"
-          inputClass="w-full" />
-      </div>
-
-      <!-- Date de fin -->
-      <div class="flex flex-col w-full max-w-sm">
-        <label for="end" class="w-full mb-1 font-medium text-gray-700">Date de fin</label>
-        <DatePicker id="end" v-model="endDate" :showIcon="true" dateFormat="dd/mm/yy" fluid class="w-full"
-          inputClass="w-full" />
-      </div>
-    </div>
+    <FiltersPanel v-model:count="count" v-model:start-date="startDate" v-model:end-date="endDate"
+      v-model:pills="pillFilters" :show-bonus="viewMode === 'daily'" />
 
     <!-- Résultats -->
     <div class="w-full min-w-0 overflow-y-auto md:max-h-full mt-5 mb-5 px-4">
