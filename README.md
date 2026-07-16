@@ -22,12 +22,17 @@ Cette application est une **liste de course interactive pour l'Almanax de Dofus*
 
 - Les données sont récupérées via l'**API publique DofusDude** (`api.dofusdu.de`), qui expose un endpoint Almanax dédié.
 - Chaque jour fournit : l'objet d'offrande, la quantité, le type d'item (`subtype`), l'`ankamaId`, l'icône et le bonus du jour.
-- Pour (re)générer `public/almanax_<année>.json` :
+- Pour (re)générer `public/almanax.json` :
 
 ```bash
-npm run fetch-almanax           # année courante
-npm run fetch-almanax 2026      # année précise
+npm run fetch-almanax           # interroge l'année courante
+npm run fetch-almanax 2026      # interroge une année précise
 ```
+
+> Les offrandes de l'Almanax sont identiques d'une année à l'autre (le front ne
+> filtre que sur le jour et le mois). Le fichier n'est donc pas versionné par année
+> et n'a pas besoin d'être régénéré chaque 1er janvier — l'argument `year` ne sert
+> qu'à choisir l'année interrogée sur l'API.
 
 - Le script enrichit aussi chaque item avec son **type précis** (`itemType` : « Céréale », « Cuir »…) via l'endpoint détail de l'API.
 

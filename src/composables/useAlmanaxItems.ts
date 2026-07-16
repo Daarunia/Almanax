@@ -1,7 +1,9 @@
 import { ref, watch } from 'vue'
 import { type AlmanaxItem, itemKey } from '../almanax'
 
-const DATA_URL = '/almanax_2026.json'
+// Les offrandes de l'Almanax sont identiques d'une année à l'autre (jour/mois),
+// donc le fichier de données n'est pas versionné par année.
+const DATA_URL = '/almanax.json'
 const STORAGE_KEY = 'purchased'
 
 const loadPurchasedState = (): Record<string, boolean> => {

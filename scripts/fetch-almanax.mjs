@@ -1,8 +1,12 @@
-// Génère public/almanax_<year>.json à partir de l'API DofusDude.
+// Génère public/almanax.json à partir de l'API DofusDude.
 // Remplace l'ancien scraper Scrapy/Selenium (fragile, bloqué par CloudFront).
 //
+// Les offrandes de l'Almanax sont identiques d'une année à l'autre (le front ne
+// filtre que sur le jour/mois), donc le fichier de sortie n'est pas versionné :
+// l'argument `year` ne sert qu'à choisir l'année interrogée sur l'API.
+//
 // Usage : node scripts/fetch-almanax.mjs [year] [lang]
-//   year : année à récupérer (défaut : année courante)
+//   year : année à interroger sur l'API (défaut : année courante)
 //   lang : langue de l'API (défaut : fr)
 
 import { writeFile, mkdir } from 'node:fs/promises'
@@ -96,7 +100,7 @@ for (const it of items) {
   }
 }
 
-const outPath = resolve(__dirname, '..', 'public', `almanax_${year}.json`)
+const outPath = resolve(__dirname, '..', 'public', 'almanax.json')
 await mkdir(dirname(outPath), { recursive: true })
 await writeFile(outPath, JSON.stringify(items, null, 0) + '\n', 'utf8')
 
