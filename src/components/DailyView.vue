@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { type AlmanaxItem, subtypeLabel, isHarvestable } from '../almanax'
+import { type AlmanaxItem, itemKey, subtypeLabel, isHarvestable } from '../almanax'
+import type { BonusMode } from '../constants'
 
 defineProps<{
   items: AlmanaxItem[]
   count: number
-  bonusMode: string
+  bonusMode: BonusMode
 }>()
 
 const bonusText = (i: AlmanaxItem) =>
@@ -13,7 +14,7 @@ const bonusText = (i: AlmanaxItem) =>
 
 <template>
   <ul class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-    <li v-for="(item, index) in items" :key="item.object + index"
+    <li v-for="item in items" :key="itemKey(item)"
       @click="item.purchased = !item.purchased"
       class="flex items-center p-3 bg-surface-50 dark:bg-surface-900 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
       <Checkbox binary class="mr-4 pointer-events-none" :modelValue="item.purchased"></Checkbox>

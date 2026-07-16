@@ -19,6 +19,5 @@ declare module 'vue' {
     FiltersPanel: typeof import('./src/components/FiltersPanel.vue')['default']
     GroceryView: typeof import('./src/components/GroceryView.vue')['default']
     InputNumber: typeof import('primevue/inputnumber')['default']
-    PillFilters: typeof import('./src/components/PillFilters.vue')['default']
   }
 }

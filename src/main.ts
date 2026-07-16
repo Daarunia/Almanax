@@ -6,7 +6,8 @@ import Aura from "@primeuix/themes/material";
 
 const app = createApp(App);
 app.use(PrimeVue, {
-  theme: {
+ license: 'eyJpZCI6IjQ4MzgxMDQzLTY2MjctNGQ0ZC04M2MwLTkzNTEwMTg2NjM0ZSIsInByb2R1Y3QiOiJwcmltZXVpIiwidGllciI6ImNvbW11bml0eSIsInR5cGUiOiJkZXYiLCJpYXQiOjE3ODQyMjkwNTAsImV4cCI6MTgxNTc2NTA1MH0.qVJvuNXG7ABnceENJ-N-CyWTFqegDmNA23La3zNAEVxL81AI-TJYx6gOrPJigHBaltNNnMhuW28uCSElaglrDA',
+ theme: {
     preset: Aura,
     options: {
       darkModeSelector: ".app-dark",

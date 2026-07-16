@@ -28,6 +28,14 @@ export const BONUS_MODES = [
   { value: 'inline', label: 'Affiché' },
 ] as const
 
+// Union des valeurs possibles d'une liste d'options (ex : 'all' | 'resources' | …).
+type OptionValue<T extends readonly { value: string }[]> = T[number]['value']
+
+export type TypeFilter = OptionValue<typeof TYPE_FILTERS>
+export type ViewMode = OptionValue<typeof VIEW_MODES>
+export type StatusFilter = OptionValue<typeof STATUS_FILTERS>
+export type BonusMode = OptionValue<typeof BONUS_MODES>
+
 // Libellés FR pour les types d'items (subtype) renvoyés par l'API DofusDude.
 export const SUBTYPE_LABELS: Record<string, string> = {
   resources: 'Ressource',

@@ -1,0 +1,6 @@
+projectKey=almanax
+serverUrl=http://localhost:9000
+serverVersion=26.1.0.118079
+dashboardUrl=http://localhost:9000/dashboard?id=almanax
+ceTaskId=41e2f600-1871-4570-9450-ec587ed41ddd
+ceTaskUrl=http://localhost:9000/api/ce/task?id=41e2f600-1871-4570-9450-ec587ed41ddd

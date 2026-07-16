@@ -1,17 +1,20 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="V extends string">
 // Groupe de "pills" mutuellement exclusives (un choix toujours sélectionné).
-const model = defineModel<string>({ required: true })
+const model = defineModel<V>({ required: true })
 
-defineProps<{
-  label: string
-  options: readonly { value: string; label: string }[]
-  activeClass: string
-}>()
+withDefaults(
+  defineProps<{
+    label?: string
+    options: readonly { value: V; label: string }[]
+    activeClass?: string
+  }>(),
+  { activeClass: 'bg-blue-600 text-white border-blue-600' },
+)
 </script>
 
 <template>
   <div>
-    <span class="block mb-1 text-sm font-medium text-gray-600">{{ label }}</span>
+    <span v-if="label" class="block mb-1 text-sm font-medium text-gray-600">{{ label }}</span>
     <div class="flex flex-wrap gap-2">
       <button v-for="o in options" :key="o.value" type="button" @click="model = o.value"
         class="px-3 py-1 rounded-xl text-sm border transition-colors"

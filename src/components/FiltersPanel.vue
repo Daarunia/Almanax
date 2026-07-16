@@ -1,12 +1,17 @@
 <script setup lang="ts">
 // Panneau latéral : filtres (pills) + nombre de persos + plage de dates.
-import type { PillFilterValues } from '../almanax'
-import PillFilters from './PillFilters.vue'
+import {
+  TYPE_FILTERS, STATUS_FILTERS, BONUS_MODES,
+  type TypeFilter, type StatusFilter, type BonusMode,
+} from '../constants'
+import FilterPills from './FilterPills.vue'
 
 const count = defineModel<number>('count', { required: true })
 const startDate = defineModel<Date | null>('startDate', { required: true })
 const endDate = defineModel<Date | null>('endDate', { required: true })
-const pills = defineModel<PillFilterValues>('pills', { required: true })
+const typeFilter = defineModel<TypeFilter>('typeFilter', { required: true })
+const statusFilter = defineModel<StatusFilter>('statusFilter', { required: true })
+const bonusMode = defineModel<BonusMode>('bonusMode', { required: true })
 
 defineProps<{
   showBonus: boolean // le bonus n'a de sens qu'en vue "par jour"
@@ -17,7 +22,18 @@ defineProps<{
   <div class="flex flex-col items-center gap-5 w-full md:w-1/4 md:shrink-0 p-6 rounded md:justify-center md:overflow-y-auto">
 
     <!-- Filtres (pills) -->
-    <PillFilters v-model="pills" :show-bonus="showBonus" />
+    <div class="w-full max-w-sm">
+      <h3 class="mb-2 text-lg font-semibold text-gray-700">Filtres</h3>
+
+      <FilterPills v-model="typeFilter" label="Type" :options="TYPE_FILTERS" class="mb-3"
+        active-class="bg-blue-600 text-white border-blue-600" />
+
+      <FilterPills v-model="statusFilter" label="Statut" :options="STATUS_FILTERS"
+        active-class="bg-green-600 text-white border-green-600" />
+
+      <FilterPills v-if="showBonus" v-model="bonusMode" label="Bonus du jour" :options="BONUS_MODES" class="mt-3"
+        active-class="bg-amber-500 text-white border-amber-500" />
+    </div>
 
     <!-- Nombre de personnages -->
     <div class="flex flex-col w-full max-w-sm">
